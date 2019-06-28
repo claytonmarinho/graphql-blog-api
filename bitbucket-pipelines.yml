@@ -1,0 +1,31 @@
+clone:
+  depth: full
+
+image: node:8.6.0
+
+pipelines:
+  default:
+    - step:
+        caches:
+          - node
+        script: # Modify the commands below to build your repository.
+          - npm install
+          - npm run pipelines
+          # Deploy to Digital Ocean
+          - mkdir -p ~/.ssh
+          - cat my_known_hosts >> ~/.ssh/known_hosts
+          - (umask 077; echo $SSH_PRIVATE_KEY | base64 --decode -i > ~/.ssh/id_rsa)
+          - git remote add server $DOCEAN_GIT_REPO
+          - git push server master
+        services:
+          - mysql
+
+definitions:
+  services:
+    mysql:
+      image: mysql:5.7.26
+      environment:
+        MYSQL_DATABASE: "pipelines"
+        MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+        MYSQL_USER: "pipelines"
+        MYSQL_PASSWORD: "let_me_in"
